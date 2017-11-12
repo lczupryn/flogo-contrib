@@ -1,5 +1,6 @@
 # tibco-pi-camera
-This activity provides your flogo application the ability to control raspberry pi CAMERA
+......
+
 
 ## Installation
 
@@ -14,107 +15,64 @@ Inputs and Outputs:
 {
   "inputs":[
     {
-      "name": "method",
+      "name": "message",
       "type": "string",
-      "required": true,
-      "allowed" : ["Direction", "Set State", "Read State", "Pull"]
+      "value": ""
     },
     {
-      "name": "pinNumber",
-      "type": "integer",
-      "required": true
+      "name": "flowInfo",
+      "type": "boolean",
+      "value": "false"
     },
     {
-      "name": "direction",
-      "type": "string",
-      "allowed" : ["Input", "Output"]
-    },
-    {
-      "name": "state",
-      "type": "string",
-      "allowed" : ["High", "Low"]
-    },
-
-    {
-      "name": "Pull",
-      "type": "string",
-      "allowed" : ["Up", "Down", "Off"]
+      "name": "addToFlow",
+      "type": "boolean",
+      "value": "false"
     }
   ],
   "outputs": [
     {
-      "name": "result",
-      "type": "integer"
+      "name": "message",
+      "type": "string"
     }
   ]
 }
 ```
 ## Settings
-| Setting     | Description    |
-|:------------|:---------------|
-| method      | The method to take action for GPIO|         
-| pinNumber   | The pin number   |
-| direction   | The direction of pin number, either Input or Output |
-| state       | The state of pin number, either high or low |
-| Pull        | Pull the pin number to Up, Down and Off |
+| Setting   | Description    |
+|:----------|:---------------|
+| message   | The message to log |         
+| flowInfo  | Append the flow information to the log message |
+| addToFlow | Add the log message to the 'message' output of the activity |
 
 
 ## Configuration Examples
-### Get pin state
-Get specific pin 23's state
+### Simple
+Configure a task to log a message 'test message':
+
 ```json
+{
+  "id": 3,
+  "type": 1,
+  "activityType": "tibco-log",
+  "name": "Log Message",
   "attributes": [
-          {
-            "name": "method",
-            "value": "Read State",
-            "type": "string"
-          },
-          {
-            "name": "pinNumber",
-            "value": "23",
-            "type": "integer"
-          }
-        ]
+    { "name": "message", "value": "test message" }
+  ]
+}
 ```
-### Set pin state
-Set pin state to High
+### Advanced
+Configure a task to log a 'petId' attribute as a message:
+
 ```json
-  "attributes": [
-          {
-            "name": "method",
-            "value": "Set State",
-            "type": "string"
-          },
-          {
-            "name": "pinNumber",
-            "value": "23",
-            "type": "integer"
-          },
-          {
-            "name": "state",
-            "value": "High",
-            "type": "string"
-          }
-        ]
-```
-### Change pin's direction
-Change pin's direction to Output
-```json
-  "attributes": [
-          {
-            "name": "method",
-            "value": "Direction",
-            "type": "string"
-          },
-          {
-            "name": "pinNumber",
-            "value": "23",
-            "type": "integer"
-          },
-          {
-            "name": "direction",
-            "value": "Output",
-            "type": "string"
-          }
-        ]
+{
+  "id": 3,
+  "type": 1,
+  "activityType": "tibco-log",
+  "name": "Log PetId",
+  "attributes": [],
+  "inputMappings": [
+    { "type": 1, "value": "petId", "mapTo": "message" }
+  ]
+}
 ```

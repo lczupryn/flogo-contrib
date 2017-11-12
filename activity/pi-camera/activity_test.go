@@ -1,11 +1,12 @@
-package gpio
+package log
 
 import (
+	"fmt"
+	"io/ioutil"
 	"testing"
 
 	"github.com/TIBCOSoftware/flogo-contrib/action/flow/test"
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
-	"io/ioutil"
 )
 
 var activityMetadata *activity.Metadata
@@ -35,20 +36,35 @@ func TestCreate(t *testing.T) {
 	}
 }
 
-func TestReadState(t *testing.T) {
+func TestEval(t *testing.T) {
 
 	act := NewActivity(getActivityMetadata())
 	tc := test.NewTestActivityContext(getActivityMetadata())
 
 	//setup attrs
-	tc.SetInput("method", "Read State")
-	tc.SetInput("pin number", 10)
-	//eval
-	_, err := act.Eval(tc)
-	if err != nil {
-		log.Errorf("Error occured: %+v", err)
-	}
-	val := tc.GetOutput("result")
-	log.Debugf("Resut %s", val)
+	tc.SetInput("message", "test message")
+	tc.SetInput("flowInfo", true)
 
+	act.Eval(tc)
+}
+
+func TestAddToFlow(t *testing.T) {
+
+	act := NewActivity(getActivityMetadata())
+	tc := test.NewTestActivityContext(getActivityMetadata())
+
+	//setup attrs
+	tc.SetInput("message", "test message")
+	tc.SetInput("flowInfo", true)
+	tc.SetInput("addToFlow", true)
+
+	act.Eval(tc)
+
+	msg := tc.GetOutput("message")
+
+	fmt.Println("Message: ", msg)
+
+	if msg == nil {
+		t.Fail()
+	}
 }

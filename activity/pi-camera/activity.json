@@ -1,44 +1,32 @@
 {
-  "name": "tibco-gpio",
+  "name": "tibco-log",
   "type": "flogo:activity",
-  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/gpio",
+  "ref": "github.com/TIBCOSoftware/flogo-contrib/activity/log",
   "version": "0.0.1",
-  "title": "Control GPIO",
-  "description": "Control raspberry gpio",
-  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/gpio",
+  "title": "Log Message",
+  "description": "Simple Log Activity",
+  "homepage": "https://github.com/TIBCOSoftware/flogo-contrib/tree/master/activity/log",
   "inputs":[
     {
-      "name": "method",
+      "name": "message",
       "type": "string",
-      "required": true,
-      "allowed" : ["Direction", "Set State", "Read State", "Pull"]
+      "value": ""
     },
     {
-      "name": "pinNumber",
-      "type": "integer",
-      "required": true
+      "name": "flowInfo",
+      "type": "boolean",
+      "value": "false"
     },
     {
-      "name": "direction",
-      "type": "string",
-      "allowed" : ["Input", "Output"]
-    },
-    {
-      "name": "state",
-      "type": "string",
-      "allowed" : ["High", "Low"]
-    },
-
-    {
-      "name": "Pull",
-      "type": "string",
-      "allowed" : ["Up", "Down", "Off"]
+      "name": "addToFlow",
+      "type": "boolean",
+      "value": "false"
     }
   ],
   "outputs": [
     {
-      "name": "result",
-      "type": "integer"
+      "name": "message",
+      "type": "string"
     }
   ]
 }

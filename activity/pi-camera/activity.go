@@ -1,137 +1,88 @@
-package gpio
+package log
 
 import (
-	"errors"
-	"strings"
+	"fmt"
+	"strconv"
 
 	"github.com/TIBCOSoftware/flogo-lib/core/activity"
 	"github.com/TIBCOSoftware/flogo-lib/logger"
-	"github.com/stianeikeland/go-rpio"
 )
 
-// log is the default package logger
-var log = logger.GetLogger("activity-tibco-rest")
+// activityLog is the default logger for the Log Activity
+var activityLog = logger.GetLogger("activity-tibco-log")
 
 const (
-	method         = "method"
-	pinNumber      = "pinNumber"
-	directionState = "direction"
-	state          = "state"
-	direction      = "Direction"
-	setState       = "Set State"
-	readState      = "Read State"
-	pull           = "Pull"
+	ivMessage   = "message"
+	ivFlowInfo  = "flowInfo"
+	ivAddToFlow = "addToFlow"
 
-	input = "Input"
-	//output = "Output"
-
-	high = "High"
-	//low = "Low"
-
-	up   = "Up"
-	down = "Down"
-	//off = "off"
-
-	//ouput
-
-	result = "result"
+	ovMessage = "message"
 )
 
-type GPIOActivity struct {
+func init() {
+	activityLog.SetLogLevel(logger.InfoLevel)
+}
+
+// LogActivity is an Activity that is used to log a message to the console
+// inputs : {message, flowInfo}
+// outputs: none
+type LogActivity struct {
 	metadata *activity.Metadata
 }
 
-// NewActivity creates a new GPIOActivity
+// NewActivity creates a new AppActivity
 func NewActivity(metadata *activity.Metadata) activity.Activity {
-	return &GPIOActivity{metadata: metadata}
+	return &LogActivity{metadata: metadata}
 }
 
 // Metadata returns the activity's metadata
-func (a *GPIOActivity) Metadata() *activity.Metadata {
+func (a *LogActivity) Metadata() *activity.Metadata {
 	return a.metadata
 }
 
-// Eval implements api.Activity.Eval - Invokes a REST Operation
-func (a *GPIOActivity) Eval(context activity.Context) (done bool, err error) {
-	//getmethod
-	log.Debug("Running gpio activity.")
-	methodInput := context.GetInput(method)
+// Eval implements api.Activity.Eval - Logs the Message
+func (a *LogActivity) Eval(context activity.Context) (done bool, err error) {
 
-	ivmethod, ok := methodInput.(string)
-	if !ok {
-		return true, errors.New("Method field not set.")
+	//mv := context.GetInput(ivMessage)
+	message, _ := context.GetInput(ivMessage).(string)
+
+	flowInfo, _ := toBool(context.GetInput(ivFlowInfo))
+	addToFlow, _ := toBool(context.GetInput(ivAddToFlow))
+
+	msg := message
+
+	if flowInfo {
+
+		msg = fmt.Sprintf("'%s' - FlowInstanceID [%s], Flow [%s], Task [%s]", msg,
+			context.FlowDetails().ID(), context.FlowDetails().Name(), context.TaskName())
 	}
 
-	//get pinNumber
-	ivPinNumber, ok := context.GetInput(pinNumber).(int)
+	activityLog.Info(msg)
 
-	if !ok {
-		return true, errors.New("Pin number must exist")
+	if addToFlow {
+		context.SetOutput(ovMessage, msg)
 	}
 
-	log.Debugf("Method '%s' and pin number '%d'", methodInput, ivPinNumber)
-	//Open pin
-	openErr := rpio.Open()
-	if openErr != nil {
-		log.Errorf("Open RPIO error: %+v", openErr.Error())
-		return true, errors.New("Open RPIO error: " + openErr.Error())
-	}
-
-	pin := rpio.Pin(ivPinNumber)
-
-	switch ivmethod {
-	case direction:
-		ivDirectionField, ok := context.GetInput(directionState).(string)
-		if !ok {
-			return true, errors.New("Direction field not set.")
-		}
-		if strings.EqualFold(input, ivDirectionField) {
-			log.Debugf("Set pin %d direction to input", pin)
-			pin.Input()
-		} else {
-			log.Debugf("Set pin %d direction to output", pin)
-			pin.Output()
-		}
-	case setState:
-		ivState, ok := context.GetInput(state).(string)
-		if !ok {
-			return true, errors.New("State field not set.")
-		}
-
-		if strings.EqualFold(high, ivState) {
-			log.Debugf("Set pin %d state to High", pin)
-			pin.High()
-		} else {
-			log.Debugf("Set pin %d state to low", pin)
-			pin.Low()
-		}
-	case readState:
-		log.Debugf("Read pin %d state..", pin)
-		state := pin.Read()
-		log.Debugf("Read state and state: %s", state)
-		context.SetOutput(result, int(state))
-		return true, nil
-	case pull:
-		ivPull, ok := context.GetInput(pull).(string)
-		if !ok {
-			return true, errors.New("Pull field not set.")
-		}
-
-		if strings.EqualFold(up, ivPull) {
-			log.Debugf("Pull pin %d  to Up", pin)
-			pin.PullUp()
-		} else if strings.EqualFold(down, ivPull) {
-			log.Debugf("Pull pin %d to Down", pin)
-			pin.PullDown()
-		} else {
-			log.Debugf("Pull pin %d to Up", pin)
-			pin.PullOff()
-		}
-	default:
-		log.Errorf("Cannot found method %s ", ivmethod)
-		return true, errors.New("Cannot found method %s " + ivmethod)
-	}
-
-	context.SetOutput(result, 0)
 	return true, nil
+}
+
+func toBool(val interface{}) (bool, error) {
+
+	b, ok := val.(bool)
+	if !ok {
+		s, ok := val.(string)
+
+		if !ok {
+			return false, fmt.Errorf("unable to convert to boolean")
+		}
+
+		var err error
+		b, err = strconv.ParseBool(s)
+
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return b, nil
 }
